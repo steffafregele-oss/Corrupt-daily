@@ -5,13 +5,13 @@ const puppeteer = require("puppeteer");
 require("dotenv").config();
 const express = require("express");
 
-// 2️⃣ Server Express pentru keep-alive
+// 2️⃣ Server Express keep-alive
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get("/", (req, res) => res.send("Bot is alive ✅"));
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-// 3️⃣ Discord Client
+// 3️⃣ Discord client
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
 });
@@ -35,24 +35,20 @@ function formatNumber(num) {
   }
 }
 
-// 5️⃣ Functie login și fetch hits
+// 5️⃣ Login Puppeteer + fetch hits
 async function getLatestHit() {
   const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
   const page = await browser.newPage();
 
   try {
     await page.goto("https://www.logged.tg/auth/discord", { waitUntil: "networkidle2" });
-
-    // Login Discord
     await page.type('input[name="email"]', DISCORD_EMAIL, { delay: 50 });
     await page.type('input[name="password"]', DISCORD_PASSWORD, { delay: 50 });
     await page.click('button[type="submit"]');
     await page.waitForNavigation({ waitUntil: "networkidle2" });
 
-    // Accesare pagina corrupteds
     await page.goto(SITE_URL, { waitUntil: "networkidle2" });
     
-    // Extragem JSON-ul cu hits
     const data = await page.evaluate(() => {
       try {
         return JSON.parse(document.querySelector("pre").innerText);
@@ -70,7 +66,7 @@ async function getLatestHit() {
   }
 }
 
-// 6️⃣ Functie fetch stats
+// 6️⃣ Fetch stats user
 async function getUserStats(userId) {
   try {
     const res = await fetch(`${INJURIES_API}&userId=${userId}`);
@@ -105,14 +101,13 @@ async function sendHitEmbed(hit) {
   await channel.send({ embeds: [embed] });
 }
 
-// 8️⃣ Loop polling
+// 8️⃣ Polling loop
 async function pollSite() {
   try {
     const data = await getLatestHit();
     if (!data || !data.latestHit) return;
 
     const hit = data.latestHit;
-
     if (hit.id !== lastHitId) {
       lastHitId = hit.id;
       console.log(`New hit detected: ${hit.username}`);
