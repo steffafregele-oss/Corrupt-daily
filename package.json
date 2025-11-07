@@ -1,7 +1,7 @@
 {
   "name": "corrupt-bot",
   "version": "1.0.0",
-  "description": "Discord bot cu daily stats si announces live hits",
+  "description": "Discord bot cu daily stats și live hit announces",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -10,7 +10,7 @@
     "discord.js": "^14.12.1",
     "node-fetch": "^2.6.7",
     "express": "^4.18.2",
-    "puppeteer": "^21.3.0"
+    "puppeteer-core": "^21.3.0"
   },
   "engines": {
     "node": "20.x"
