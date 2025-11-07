@@ -1,16 +1,15 @@
 {
   "name": "corrupt-bot",
   "version": "1.0.0",
-  "description": "Discord bot care monitorizează site-ul și postează stats live",
+  "description": "Discord bot cu !stats, !daily și monitorizare site",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
     "discord.js": "^14.12.1",
-    "node-fetch": "^2.6.7",
-    "puppeteer": "^21.3.3",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "node-fetch": "^2.6.7"
   },
   "engines": {
     "node": "18.x"
