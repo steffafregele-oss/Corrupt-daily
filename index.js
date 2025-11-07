@@ -1,11 +1,10 @@
 // 1️⃣ Importuri
 const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
-const fetch = require("node-fetch");
-const puppeteer = require("puppeteer-core");
+const puppeteer = require("puppeteer");
 require("dotenv").config();
 const express = require("express");
 
-// 2️⃣ Server Express keep-alive
+// 2️⃣ Express server keep-alive
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get("/", (req, res) => res.send("Bot is alive ✅"));
@@ -16,31 +15,30 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
 });
 
-// 4️⃣ Variables din Render
+// 4️⃣ Variabile de mediu
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
 const ANNOUNCE_CHANNEL_ID = process.env.ANNOUNCE_CHANNEL_ID;
-const SITE_URL = process.env.SITE_URL; // ex: https://www.logged.tg/auth/corrupteds
-const INJURIES_API = process.env.INJURIES_API; // ex: https://api.injuries.lu/v2/daily?type=0x2&cs=3&ref=corrupteds
+const SITE_URL = process.env.SITE_URL;
 const POLL_INTERVAL_MS = parseInt(process.env.POLL_INTERVAL_MS) || 30000;
 const DISCORD_EMAIL = process.env.DISCORD_EMAIL;
 const DISCORD_PASSWORD = process.env.DISCORD_PASSWORD;
 
 let lastHitId = null;
 
-// 5️⃣ Funcții utile
+// 5️⃣ Funcție utilă
 function formatNumber(num) {
-  try { return num.toLocaleString(); } catch { return "0"; }
+  try {
+    return num.toLocaleString();
+  } catch {
+    return "0";
+  }
 }
 
-// 6️⃣ Fetch latest hit de pe site folosind Puppeteer
+// 6️⃣ Obține ultimul hit de pe site
 async function getLatestHit() {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    executablePath: process.env.CHROMIUM_PATH // folosește Chromium-ul deja instalat pe Render
-  });
-
+  const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
   const page = await browser.newPage();
+
   try {
     await page.goto("https://www.logged.tg/auth/discord", { waitUntil: "networkidle2" });
     await page.type('input[name="email"]', DISCORD_EMAIL, { delay: 50 });
@@ -67,41 +65,25 @@ async function getLatestHit() {
   }
 }
 
-// 7️⃣ Fetch stats user
-async function getUserStats(userId) {
-  try {
-    const res = await fetch(`${INJURIES_API}&userId=${userId}`);
-    const data = await res.json();
-    return data;
-  } catch (err) {
-    console.error("Error fetching stats:", err);
-    return null;
-  }
-}
-
-// 8️⃣ Trimitere embed Discord
+// 7️⃣ Trimite embed pe Discord
 async function sendHitEmbed(hit) {
   const channel = await client.channels.fetch(ANNOUNCE_CHANNEL_ID);
   if (!channel) return;
-
-  const stats = await getUserStats(hit.userId);
-  const profile = stats?.Profile || {};
 
   const embed = new EmbedBuilder()
     .setColor(0x000000)
     .setTitle(`<a:blackverified:1435093657010176071> LIVE HIT!`)
     .setDescription(
-      `**User:** ${profile.userName || hit.username}\n` +
+      `**User:** ${hit.username || "Unknown"}\n` +
       `**Robux:** ${hit.robux || 0}\n` +
       `**Summary:** ${hit.summary || 0}`
     )
-    .setThumbnail(profile.avatarUrl || "")
     .setFooter({ text: "Live Hits Monitor" });
 
   await channel.send({ embeds: [embed] });
 }
 
-// 9️⃣ Polling loop
+// 8️⃣ Loop de polling
 async function pollSite() {
   try {
     const data = await getLatestHit();
@@ -118,16 +100,16 @@ async function pollSite() {
   }
 }
 
-// 🔟 Discord ready
+// 9️⃣ Ready Discord
 client.once("ready", () => {
   console.log(`✅ Bot ready as ${client.user.tag}`);
   setInterval(pollSite, POLL_INTERVAL_MS);
 });
 
-// 1️⃣1️⃣ Error handler
+// 🔟 Error handler
 client.on("error", (error) => console.error("Discord client error:", error));
 
-// 1️⃣2️⃣ Login bot
+// 1️⃣1️⃣ Login bot
 if (!TOKEN) {
   console.error("❌ DISCORD_BOT_TOKEN is not set!");
   process.exit(1);
